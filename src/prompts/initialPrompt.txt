@@ -1,0 +1,12 @@
+I want to create a simple suppliers database with Supabase for my small hotels.
+Allows hotel managers to easily look for and enter info about suppliers.
+Should be straightforward, easy to use,
+
+It will be accessible online in a new project, similar techniques uses as what was already created fon Instahotel and PandL projects (they are in githhub).
+You can take a look at these projects in github.
+
+Just a simple supplier database (propose fields)
+Allows to look for suppliers in an easy way (smart search looks in all fields)
+Will be accessible online through streamlit (but we develop here locally first then push online)
+Same methodology and techniques as used in instAhotel and pandL. You should have the .env files inthose projects.
+I let you think, ask questions and plan.

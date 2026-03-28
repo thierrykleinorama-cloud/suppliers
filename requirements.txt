@@ -1,0 +1,13 @@
+# Suppliers — Dependencies
+
+# UI
+streamlit>=1.33.0
+
+# Database
+supabase>=2.3.0
+
+# Data models
+pydantic>=2.0.0
+
+# Environment
+python-dotenv>=1.0.0
