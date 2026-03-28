@@ -12,12 +12,15 @@
 - [x] Detail page (app/pages/2_Supplier_Detail.py) — view/edit/new/delete
 - [x] Config files (.env.example, requirements.txt, .streamlit/config.toml, .gitignore)
 - [x] Table creation script (scripts/create_tables.py)
-- [x] Create tables in Supabase via Management API — both suppliers + supplier_categories created
+- [x] Create tables in Supabase via Management API
 - [x] CRUD test passed: create, read, delete supplier + fetch categories
+- [x] Categories updated: Upkeeping, Maintenance, Marketing/Advertising, Utilities, Admin, Financial, Renovation/Design, Other
+- [x] Light theme, compact layout, dark readable text in all modes
+- [x] Button alignment, mode indicators, hidden Save in view mode
+- [x] Own GitHub repo (thierrykleinorama-cloud/suppliers, public)
+- [x] Streamlit Cloud deployment configured
 
 ## BACKLOG
 
-- [ ] Test full UI flow in browser (create, list, search, edit, delete)
 - [ ] Import/Export feature (CSV/Excel)
-- [ ] Deploy to Streamlit Cloud
 - [ ] Git setup: local branch for dev, main for deploy
