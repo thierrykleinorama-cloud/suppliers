@@ -52,28 +52,32 @@ else:
         "View or edit supplier details",
     )
 
+# -- Mode indicator --
+if not is_new:
+    if is_view:
+        st.caption("You are in view mode")
+    else:
+        st.caption("You are in Edit mode")
+
+# -- Buttons row (all on same line, no captions) --
 col_back, col_mode, col_delete = st.columns([1, 1, 1])
 
 with col_back:
-    st.caption("\u00A0")
     if st.button(":material/arrow_back: Back to list"):
         st.switch_page("pages/1_Suppliers.py")
 
 if not is_new:
     with col_mode:
         if is_view:
-            st.caption("You are in view mode")
             if st.button(":material/edit: Go to Edit mode", type="primary"):
                 st.session_state["detail_mode"] = "edit"
                 st.rerun()
         else:
-            st.caption("You are in Edit mode")
             if st.button(":material/visibility: Go to View mode"):
                 st.session_state["detail_mode"] = "view"
                 st.rerun()
 
     with col_delete:
-        st.caption("\u00A0")  # non-breaking space — same height as mode caption
         if st.button(":material/delete: Delete", type="secondary"):
             st.session_state["confirm_delete"] = True
 
