@@ -101,7 +101,10 @@ disabled = is_view
 categories = fetch_categories()
 CAT_OTHER = "+ New category..."
 cat_options = categories + [CAT_OTHER]
-current_cat = supplier.get("category", "")
+def _s(key: str) -> str:
+    return supplier.get(key) or ""
+
+current_cat = _s("category")
 cat_index = cat_options.index(current_cat) if current_cat in cat_options else 0
 
 # -- Compact form --
@@ -109,7 +112,7 @@ with st.form("supplier_form"):
 
     # === Line 1: Company, Category, Hotels, Tags ===
     c1, c2, c3, c4, c5, c6 = st.columns([2.5, 1.8, 0.8, 0.7, 0.8, 1.5])
-    company = c1.text_input("Company *", value=supplier.get("company", ""), disabled=disabled, max_chars=60)
+    company = c1.text_input("Company *", value=_s("company"), disabled=disabled, max_chars=60)
     selected_category = c2.selectbox("Category", options=cat_options, index=cat_index if current_cat in cat_options else 0, disabled=disabled)
     current_hotels = supplier.get("hotels") or []
     selected_hotels = []
@@ -131,34 +134,35 @@ with st.form("supplier_form"):
 
     # === Line 2: Title, Last name, First name, Phone1, Phone2 ===
     c1, c2, c3, c4, c5 = st.columns([0.6, 1.8, 1.8, 1.2, 1.2])
-    sex = c1.selectbox("Title", options=SEX_OPTIONS, index=SEX_OPTIONS.index(supplier.get("sex", "")) if supplier.get("sex", "") in SEX_OPTIONS else 0, disabled=disabled)
-    last_name = c2.text_input("Last name", value=supplier.get("last_name", ""), disabled=disabled, max_chars=40)
-    first_name = c3.text_input("First name", value=supplier.get("first_name", ""), disabled=disabled, max_chars=40)
-    phone1 = c4.text_input("Phone 1", value=supplier.get("phone1", ""), disabled=disabled, max_chars=20)
-    phone2 = c5.text_input("Phone 2", value=supplier.get("phone2", ""), disabled=disabled, max_chars=20)
+    sex_value = _s("sex")
+    sex = c1.selectbox("Title", options=SEX_OPTIONS, index=SEX_OPTIONS.index(sex_value) if sex_value in SEX_OPTIONS else 0, disabled=disabled)
+    last_name = c2.text_input("Last name", value=_s("last_name"), disabled=disabled, max_chars=40)
+    first_name = c3.text_input("First name", value=_s("first_name"), disabled=disabled, max_chars=40)
+    phone1 = c4.text_input("Phone 1", value=_s("phone1"), disabled=disabled, max_chars=20)
+    phone2 = c5.text_input("Phone 2", value=_s("phone2"), disabled=disabled, max_chars=20)
 
     # === Line 3: Email, Website, Facebook, Instagram ===
     c1, c2, c3, c4 = st.columns(4)
-    email = c1.text_input("Email", value=supplier.get("email", ""), disabled=disabled, max_chars=60)
-    website = c2.text_input("Website", value=supplier.get("website", ""), disabled=disabled, max_chars=80)
-    facebook = c3.text_input("Facebook", value=supplier.get("facebook", ""), disabled=disabled, max_chars=80)
-    instagram = c4.text_input("Instagram", value=supplier.get("instagram", ""), disabled=disabled, max_chars=80)
+    email = c1.text_input("Email", value=_s("email"), disabled=disabled, max_chars=60)
+    website = c2.text_input("Website", value=_s("website"), disabled=disabled, max_chars=80)
+    facebook = c3.text_input("Facebook", value=_s("facebook"), disabled=disabled, max_chars=80)
+    instagram = c4.text_input("Instagram", value=_s("instagram"), disabled=disabled, max_chars=80)
 
     # === Line 4: Address, City, Country ===
     c1, c2, c3 = st.columns([4, 2, 1.5])
-    address = c1.text_input("Address", value=supplier.get("address", ""), disabled=disabled, max_chars=100)
-    city = c2.text_input("City", value=supplier.get("city", ""), disabled=disabled, max_chars=40)
-    country = c3.text_input("Country", value=supplier.get("country", "") or "Spain", disabled=disabled, max_chars=30)
+    address = c1.text_input("Address", value=_s("address"), disabled=disabled, max_chars=100)
+    city = c2.text_input("City", value=_s("city"), disabled=disabled, max_chars=40)
+    country = c3.text_input("Country", value=_s("country") or "Spain", disabled=disabled, max_chars=30)
 
     # === Line 5: VAT, Payment terms, IBAN, Rating ===
     c1, c2, c3, c4 = st.columns([1.2, 1.2, 2, 1])
-    vat_number = c1.text_input("VAT number", value=supplier.get("vat_number", ""), disabled=disabled, max_chars=20)
-    payment_terms = c2.text_input("Payment terms", value=supplier.get("payment_terms", ""), disabled=disabled, max_chars=20)
-    iban = c3.text_input("IBAN", value=supplier.get("iban", ""), disabled=disabled, max_chars=34)
+    vat_number = c1.text_input("VAT number", value=_s("vat_number"), disabled=disabled, max_chars=20)
+    payment_terms = c2.text_input("Payment terms", value=_s("payment_terms"), disabled=disabled, max_chars=20)
+    iban = c3.text_input("IBAN", value=_s("iban"), disabled=disabled, max_chars=34)
     rating = c4.slider("Rating", min_value=0, max_value=5, value=supplier.get("rating") or 0, disabled=disabled, help="0 = not rated")
 
     # === Line 6: Notes (full width) ===
-    notes = st.text_area("Notes", value=supplier.get("notes", ""), height=80, disabled=disabled)
+    notes = st.text_area("Notes", value=_s("notes"), height=80, disabled=disabled)
 
     # === Submit ===
     if is_view:
