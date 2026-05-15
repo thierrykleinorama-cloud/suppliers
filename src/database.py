@@ -7,8 +7,7 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
-from supabase import create_client, Client
-from supabase.lib.client_options import SyncClientOptions
+from supabase import create_client, Client, ClientOptions
 
 # Load environment variables from project root
 _project_root = Path(__file__).parent.parent
@@ -46,7 +45,7 @@ def get_supabase() -> Client:
             )
         _supabase_client = create_client(
             url, key,
-            options=SyncClientOptions(flow_type="pkce"),
+            options=ClientOptions(flow_type="pkce"),
         )
     return _supabase_client
 
