@@ -11,13 +11,25 @@ if _root not in sys.path:
     sys.path.insert(0, _root)
 
 import streamlit as st
+from src.auth import check_auth, login_form, logout
 
 st.set_page_config(
     page_title="Suppliers Directory",
     page_icon=":material/contacts:",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed" if not check_auth() else "expanded",
 )
+
+# -- Auth gate --
+if not check_auth():
+    login_form()
+    st.stop()
+
+# -- Authenticated: sidebar user info + logout --
+with st.sidebar:
+    st.caption(f"Logged in as {st.session_state.get('auth_user_email', '')}")
+    if st.button(":material/logout: Logout", key="logout_btn"):
+        logout()
 
 pg = st.navigation(
     {

@@ -22,5 +22,6 @@
 
 ## BACKLOG
 
+- [x] Supabase Auth: login gate for organization members only
 - [ ] Import/Export feature (CSV/Excel)
-- [ ] Git setup: local branch for dev, main for deploy
+- [x] Git setup: local branch for dev, main for deploy
