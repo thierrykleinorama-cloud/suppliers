@@ -17,7 +17,7 @@ def _get_app_url() -> str:
     except Exception:
         pass
     import os
-    return os.getenv("APP_URL", "http://localhost:8502")
+    return os.getenv("APP_URL", "https://coinmiaousuppliers.streamlit.app")
 
 
 def handle_oauth_callback():
