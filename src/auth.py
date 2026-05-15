@@ -70,27 +70,22 @@ def login_form():
         st.caption("Sign in to continue")
 
         # -- Google OAuth (primary) --
-        if st.button(
-            ":material/login: Sign in with Google",
-            type="primary",
-            use_container_width=True,
-            key="google_login",
-        ):
-            try:
-                client = get_supabase()
-                response = client.auth.sign_in_with_oauth({
-                    "provider": "google",
-                    "options": {
-                        "redirect_to": _get_app_url(),
-                    },
-                })
-                st.markdown(
-                    f'<meta http-equiv="refresh" content="0;url={response.url}">',
-                    unsafe_allow_html=True,
-                )
-                st.stop()
-            except Exception as e:
-                st.error(f"Google login failed: {e}")
+        try:
+            client = get_supabase()
+            response = client.auth.sign_in_with_oauth({
+                "provider": "google",
+                "options": {
+                    "redirect_to": _get_app_url(),
+                },
+            })
+            st.link_button(
+                ":material/login: Sign in with Google",
+                url=response.url,
+                type="primary",
+                use_container_width=True,
+            )
+        except Exception as e:
+            st.error(f"Google login failed: {e}")
 
         st.divider()
         st.caption("Or sign in with email")
