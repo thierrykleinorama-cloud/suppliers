@@ -11,7 +11,7 @@ if _root not in sys.path:
     sys.path.insert(0, _root)
 
 import streamlit as st
-from src.auth import check_auth, login_form, logout
+from src.auth import check_auth, handle_oauth_callback, login_form, logout
 
 st.set_page_config(
     page_title="Suppliers Directory",
@@ -19,6 +19,9 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed" if not check_auth() else "expanded",
 )
+
+# -- Handle OAuth callback (Google redirect) --
+handle_oauth_callback()
 
 # -- Auth gate --
 if not check_auth():

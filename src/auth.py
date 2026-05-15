@@ -1,9 +1,41 @@
 """
 Suppliers — Authentication (Supabase Auth)
-Gate the app behind email/password login.
+Gate the app behind login: Google OAuth (primary) + email/password (fallback).
 """
 import streamlit as st
 from src.database import get_supabase
+
+
+def _get_app_url() -> str:
+    """Return the app URL (production or local dev)."""
+    try:
+        if st.secrets.get("APP_URL"):
+            return st.secrets["APP_URL"]
+    except Exception:
+        pass
+    import os
+    return os.getenv("APP_URL", "http://localhost:8502")
+
+
+def handle_oauth_callback():
+    """Check for OAuth callback code in URL params and exchange for session."""
+    params = st.query_params
+    if "code" not in params:
+        return
+
+    code = params["code"]
+    try:
+        client = get_supabase()
+        response = client.auth.exchange_code_for_session({"auth_code": code})
+        if response.session:
+            st.session_state["auth_access_token"] = response.session.access_token
+            st.session_state["auth_refresh_token"] = response.session.refresh_token
+            st.session_state["auth_user_email"] = response.user.email
+    except Exception as e:
+        st.error(f"OAuth login failed: {e}")
+
+    # Clear the code from URL to avoid re-processing on refresh
+    st.query_params.clear()
 
 
 def check_auth() -> bool:
@@ -31,17 +63,44 @@ def check_auth() -> bool:
 
 
 def login_form():
-    """Render a centered login form. Call st.stop() after this."""
+    """Render login page: Google OAuth button + email/password fallback."""
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("## :material/lock: Suppliers Directory")
         st.caption("Sign in to continue")
 
+        # -- Google OAuth (primary) --
+        if st.button(
+            ":material/login: Sign in with Google",
+            type="primary",
+            use_container_width=True,
+            key="google_login",
+        ):
+            try:
+                client = get_supabase()
+                response = client.auth.sign_in_with_oauth({
+                    "provider": "google",
+                    "options": {
+                        "redirect_to": _get_app_url(),
+                    },
+                })
+                st.markdown(
+                    f'<meta http-equiv="refresh" content="0;url={response.url}">',
+                    unsafe_allow_html=True,
+                )
+                st.stop()
+            except Exception as e:
+                st.error(f"Google login failed: {e}")
+
+        st.divider()
+        st.caption("Or sign in with email")
+
+        # -- Email/password (fallback) --
         with st.form("login_form"):
             email = st.text_input("Email")
             password = st.text_input("Password", type="password")
             submitted = st.form_submit_button(
-                "Sign in", type="primary", use_container_width=True
+                "Sign in", use_container_width=True
             )
 
         if submitted:

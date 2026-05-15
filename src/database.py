@@ -8,6 +8,7 @@ from typing import Optional
 
 from dotenv import load_dotenv
 from supabase import create_client, Client
+from supabase.lib.client_options import SyncClientOptions
 
 # Load environment variables from project root
 _project_root = Path(__file__).parent.parent
@@ -43,7 +44,10 @@ def get_supabase() -> Client:
             raise ValueError(
                 "SUPABASE_URL and SUPABASE_KEY must be set in .env or Streamlit secrets"
             )
-        _supabase_client = create_client(url, key)
+        _supabase_client = create_client(
+            url, key,
+            options=SyncClientOptions(flow_type="pkce"),
+        )
     return _supabase_client
 
 
