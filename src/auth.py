@@ -9,6 +9,12 @@ from src.database import get_supabase
 _CODE_VERIFIER_KEY = "supabase.auth.token-code-verifier"
 
 
+@st.cache_resource
+def _get_cv_store():
+    """Server-side store for PKCE code_verifier (survives page navigation)."""
+    return {}
+
+
 def _get_app_url() -> str:
     """Return the app URL (production or local dev)."""
     try:
@@ -21,13 +27,16 @@ def _get_app_url() -> str:
 
 
 def handle_oauth_callback():
-    """Check for OAuth code in URL params and exchange for session using code_verifier from URL."""
+    """Check for OAuth code in URL params and exchange for session."""
     params = st.query_params
     if "code" not in params:
         return
 
     code = params["code"]
-    code_verifier = params.get("cv")
+
+    # Retrieve code_verifier from server-side store
+    store = _get_cv_store()
+    code_verifier = store.get("cv")
 
     if not code_verifier:
         st.error("OAuth session expired. Please try signing in again.")
@@ -46,6 +55,9 @@ def handle_oauth_callback():
     except Exception as e:
         st.error(f"OAuth login failed: {e}")
 
+    # Clear stored OAuth URL + code_verifier so a fresh pair is generated next time
+    store.pop("cv", None)
+    store.pop("oauth_url", None)
     st.query_params.clear()
 
 
@@ -80,37 +92,27 @@ def login_form():
 
         # -- Google OAuth (primary) --
         try:
-            from urllib.parse import quote
+            store = _get_cv_store()
 
-            client = get_supabase()
-            app_url = _get_app_url()
+            # Generate OAuth URL only once — reuse on reruns so code_verifier stays matched
+            if "oauth_url" not in store:
+                client = get_supabase()
+                app_url = _get_app_url()
 
-            # Generate OAuth URL (this creates a code_verifier internally)
-            response = client.auth.sign_in_with_oauth({
-                "provider": "google",
-                "options": {
-                    "redirect_to": app_url,
-                },
-            })
+                response = client.auth.sign_in_with_oauth({
+                    "provider": "google",
+                    "options": {
+                        "redirect_to": app_url,
+                    },
+                })
 
-            # Grab the code_verifier that was just generated
-            code_verifier = client.auth._storage.get_item(_CODE_VERIFIER_KEY)
-
-            # Patch the redirect_to in the OAuth URL to include the code_verifier
-            # so it survives the browser navigation to Google and back
-            if code_verifier:
-                new_redirect = quote(f"{app_url}?cv={code_verifier}", safe="")
-                old_redirect = quote(app_url, safe="")
-                oauth_url = response.url.replace(
-                    f"redirect_to={old_redirect}",
-                    f"redirect_to={new_redirect}",
-                )
-            else:
-                oauth_url = response.url
+                code_verifier = client.auth._storage.get_item(_CODE_VERIFIER_KEY)
+                store["oauth_url"] = response.url
+                store["cv"] = code_verifier
 
             st.link_button(
                 ":material/login: Sign in with Google",
-                url=oauth_url,
+                url=store["oauth_url"],
                 type="primary",
                 use_container_width=True,
             )
