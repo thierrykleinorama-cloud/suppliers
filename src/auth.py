@@ -21,13 +21,13 @@ def _get_app_url() -> str:
 
 
 def handle_oauth_callback():
-    """Check for OAuth code in URL params and exchange for session using stored code_verifier."""
+    """Check for OAuth code in URL params and exchange for session using code_verifier from URL."""
     params = st.query_params
     if "code" not in params:
         return
 
     code = params["code"]
-    code_verifier = st.session_state.get("oauth_code_verifier")
+    code_verifier = params.get("cv")
 
     if not code_verifier:
         st.error("OAuth session expired. Please try signing in again.")
@@ -46,8 +46,6 @@ def handle_oauth_callback():
     except Exception as e:
         st.error(f"OAuth login failed: {e}")
 
-    # Clean up
-    st.session_state.pop("oauth_code_verifier", None)
     st.query_params.clear()
 
 
@@ -82,21 +80,37 @@ def login_form():
 
         # -- Google OAuth (primary) --
         try:
+            from urllib.parse import quote
+
             client = get_supabase()
+            app_url = _get_app_url()
+
+            # Generate OAuth URL (this creates a code_verifier internally)
             response = client.auth.sign_in_with_oauth({
                 "provider": "google",
                 "options": {
-                    "redirect_to": _get_app_url(),
+                    "redirect_to": app_url,
                 },
             })
-            # Save code_verifier to session state so it survives the redirect
+
+            # Grab the code_verifier that was just generated
             code_verifier = client.auth._storage.get_item(_CODE_VERIFIER_KEY)
+
+            # Patch the redirect_to in the OAuth URL to include the code_verifier
+            # so it survives the browser navigation to Google and back
             if code_verifier:
-                st.session_state["oauth_code_verifier"] = code_verifier
+                new_redirect = quote(f"{app_url}?cv={code_verifier}", safe="")
+                old_redirect = quote(app_url, safe="")
+                oauth_url = response.url.replace(
+                    f"redirect_to={old_redirect}",
+                    f"redirect_to={new_redirect}",
+                )
+            else:
+                oauth_url = response.url
 
             st.link_button(
                 ":material/login: Sign in with Google",
-                url=response.url,
+                url=oauth_url,
                 type="primary",
                 use_container_width=True,
             )
