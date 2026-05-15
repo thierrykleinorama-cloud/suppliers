@@ -6,6 +6,9 @@ import streamlit as st
 from src.database import get_supabase
 
 
+_CODE_VERIFIER_KEY = "supabase.auth.token-code-verifier"
+
+
 def _get_app_url() -> str:
     """Return the app URL (production or local dev)."""
     try:
@@ -18,14 +21,23 @@ def _get_app_url() -> str:
 
 
 def handle_oauth_callback():
-    """Check for OAuth callback code in URL params and exchange for session."""
+    """Check for OAuth code in URL params and exchange for session using stored code_verifier."""
     params = st.query_params
     if "code" not in params:
         return
 
     code = params["code"]
+    code_verifier = st.session_state.get("oauth_code_verifier")
+
+    if not code_verifier:
+        st.error("OAuth session expired. Please try signing in again.")
+        st.query_params.clear()
+        return
+
     try:
         client = get_supabase()
+        # Restore code_verifier into the client's storage so exchange works
+        client.auth._storage.set_item(_CODE_VERIFIER_KEY, code_verifier)
         response = client.auth.exchange_code_for_session({"auth_code": code})
         if response.session:
             st.session_state["auth_access_token"] = response.session.access_token
@@ -34,7 +46,8 @@ def handle_oauth_callback():
     except Exception as e:
         st.error(f"OAuth login failed: {e}")
 
-    # Clear the code from URL to avoid re-processing on refresh
+    # Clean up
+    st.session_state.pop("oauth_code_verifier", None)
     st.query_params.clear()
 
 
@@ -51,12 +64,10 @@ def check_auth() -> bool:
         client.auth.set_session(access_token, refresh_token)
         session = client.auth.get_session()
         if session:
-            # Update tokens in case they were refreshed
             st.session_state["auth_access_token"] = session.access_token
             st.session_state["auth_refresh_token"] = session.refresh_token
             return True
     except Exception:
-        # Session invalid or expired beyond refresh — clear and require login
         _clear_auth_state()
 
     return False
@@ -78,6 +89,11 @@ def login_form():
                     "redirect_to": _get_app_url(),
                 },
             })
+            # Save code_verifier to session state so it survives the redirect
+            code_verifier = client.auth._storage.get_item(_CODE_VERIFIER_KEY)
+            if code_verifier:
+                st.session_state["oauth_code_verifier"] = code_verifier
+
             st.link_button(
                 ":material/login: Sign in with Google",
                 url=response.url,
@@ -149,5 +165,6 @@ def logout():
 
 def _clear_auth_state():
     """Remove auth keys from session state."""
-    for key in ("auth_access_token", "auth_refresh_token", "auth_user_email"):
+    for key in ("auth_access_token", "auth_refresh_token", "auth_user_email",
+                "oauth_code_verifier"):
         st.session_state.pop(key, None)
