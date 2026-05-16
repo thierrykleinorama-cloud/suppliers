@@ -23,5 +23,10 @@
 ## BACKLOG
 
 - [x] Supabase Auth: login gate for organization members only
+- [x] Google OAuth: primary login method (PKCE flow, code_verifier cached server-side)
+- [x] Auth template: self-contained auth.py + integration guide for reuse across projects
+- [x] Chrome Debug setup: Playwright CDP shortcut for browser testing
+- [ ] Add auth to instaHotel (use auth_template.py)
+- [ ] Add auth to pAndL (use auth_template.py)
 - [ ] Import/Export feature (CSV/Excel)
 - [x] Git setup: local branch for dev, main for deploy
